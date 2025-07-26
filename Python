@@ -1,0 +1,49 @@
+# Save this as app.py
+from flask import Flask, request, render_template
+
+app = Flask(__name__)
+
+# Route to serve the HTML form (optional, you could serve it statically too)
+@app.route('/')
+def index():
+    return render_template('index.html') # You would need to save the HTML above as templates/index.html
+
+# Route to handle form submission
+@app.route('/submit_patient_data', methods=['POST'])
+def submit_patient_data():
+    if request.method == 'POST':
+        patient_id = request.form['patientID']
+        full_name = request.form['fullName']
+        dob = request.form['dob']
+        gender = request.form['gender']
+        enrollment_date = request.form['enrollmentDate']
+        diagnosis = request.form.get('diagnosis', '') # .get for optional fields
+        drug_dose = request.form.get('drugDose', '')
+
+        print(f"Received Patient Data:")
+        print(f"  Patient ID: {patient_id}")
+        print(f"  Full Name: {full_name}")
+        print(f"  Date of Birth: {dob}")
+        print(f"  Gender: {gender}")
+        print(f"  Enrollment Date: {enrollment_date}")
+        print(f"  Diagnosis: {diagnosis}")
+        print(f"  Drug Dose: {drug_dose}")
+
+        # In a real application, you would save this data to a database
+        # Example (conceptual):
+        # db_connection = get_db_connection()
+        # cursor = db_connection.cursor()
+        # cursor.execute("INSERT INTO patients (...) VALUES (?)", (patient_id, ...))
+        # db_connection.commit()
+        # cursor.close()
+        # db_connection.close()
+
+        return "Patient data received successfully! (Check server console)"
+
+if __name__ == '__main__':
+    # To run:
+    # 1. pip install flask
+    # 2. Make sure the HTML code above is saved as 'templates/index.html' in the same directory as this Python file.
+    # 3. python app.py
+    # 4. Open your browser to http://127.0.0.1:5000/
+    app.run(debug=True)
