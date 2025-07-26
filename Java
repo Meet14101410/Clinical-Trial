@@ -1,0 +1,128 @@
+// Patient.java
+import java.time.LocalDate;
+import java.util.Objects;
+
+public class Patient {
+    private String patientID;
+    private String fullName;
+    private LocalDate dob;
+    private String gender;
+    private LocalDate enrollmentDate;
+    private String diagnosis;
+    private Double drugDose;
+
+    public Patient(String patientID, String fullName, LocalDate dob, String gender,
+                   LocalDate enrollmentDate, String diagnosis, Double drugDose) {
+        this.patientID = patientID;
+        this.fullName = fullName;
+        this.dob = dob;
+        this.gender = gender;
+        this.enrollmentDate = enrollmentDate;
+        this.diagnosis = diagnosis;
+        this.drugDose = drugDose;
+    }
+
+    // Getters
+    public String getPatientID() { return patientID; }
+    public String getFullName() { return fullName; }
+    public LocalDate getDob() { return dob; }
+    public String getGender() { return gender; }
+    public LocalDate getEnrollmentDate() { return enrollmentDate; }
+    public String getDiagnosis() { return diagnosis; }
+    public Double getDrugDose() { return drugDose; }
+
+    // Setters (if needed, but often data objects are immutable)
+    public void setDiagnosis(String diagnosis) { this.diagnosis = diagnosis; }
+    public void setDrugDose(Double drugDose) { this.drugDose = drugDose; }
+
+    @Override
+    public String toString() {
+        return "Patient{" +
+               "patientID='" + patientID + '\'' +
+               ", fullName='" + fullName + '\'' +
+               ", dob=" + dob +
+               ", gender='" + gender + '\'' +
+               ", enrollmentDate=" + enrollmentDate +
+               ", diagnosis='" + diagnosis + '\'' +
+               ", drugDose=" + drugDose +
+               '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Patient patient = (Patient) o;
+        return Objects.equals(patientID, patient.patientID);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(patientID);
+    }
+}
+
+// ClinicalTrialRepository.java (Conceptual Data Access Layer)
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+public class ClinicalTrialRepository {
+    // In a real application, this would interact with a database
+    private Map<String, Patient> patients = new HashMap<>(); // Using HashMap for in-memory storage
+
+    public void addPatient(Patient patient) {
+        if (patients.containsKey(patient.getPatientID())) {
+            System.out.println("Error: Patient with ID " + patient.getPatientID() + " already exists.");
+        } else {
+            patients.put(patient.getPatientID(), patient);
+            System.out.println("Patient " + patient.getFullName() + " added.");
+        }
+    }
+
+    public Optional<Patient> getPatientById(String patientID) {
+        return Optional.ofNullable(patients.get(patientID));
+    }
+
+    public List<Patient> getAllPatients() {
+        return new ArrayList<>(patients.values());
+    }
+
+    public void updatePatientDiagnosis(String patientID, String newDiagnosis) {
+        getPatientById(patientID).ifPresent(patient -> {
+            patient.setDiagnosis(newDiagnosis);
+            System.out.println("Updated diagnosis for patient " + patientID);
+        });
+    }
+
+    // ... other methods like delete, update drug dose, etc.
+}
+
+// Main.java (To demonstrate usage)
+import java.time.LocalDate;
+
+public class Main {
+    public static void main(String[] args) {
+        ClinicalTrialRepository repository = new ClinicalTrialRepository();
+
+        Patient p1 = new Patient("P001", "Alice Smith", LocalDate.of(1985, 5, 15), "Female",
+                                 LocalDate.of(2023, 1, 10), "Hypertension", 50.0);
+        Patient p2 = new Patient("P002", "Bob Johnson", LocalDate.of(1990, 8, 20), "Male",
+                                 LocalDate.of(2023, 1, 12), "Diabetes", 10.0);
+
+        repository.addPatient(p1);
+        repository.addPatient(p2);
+
+        System.out.println("\nAll Patients:");
+        repository.getAllPatients().forEach(System.out::println);
+
+        System.out.println("\nGetting P001:");
+        repository.getPatientById("P001").ifPresent(System.out::println);
+
+        repository.updatePatientDiagnosis("P001", "Controlled Hypertension");
+        System.out.println("\nUpdated P001:");
+        repository.getPatientById("P001").ifPresent(System.out::println);
+    }
+}
