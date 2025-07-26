@@ -1,0 +1,131 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <optional> // For C++17 onwards for cleaner optional return
+
+// Simple Date structure
+struct Date {
+    int year;
+    int month;
+    int day;
+
+    std::string toString() const {
+        return std::to_string(year) + "-" +
+               (month < 10 ? "0" : "") + std::to_string(month) + "-" +
+               (day < 10 ? "0" : "") + std::to_string(day);
+    }
+};
+
+// Patient structure
+struct Patient {
+    std::string patientID;
+    std::string fullName;
+    Date dob;
+    std::string gender;
+    Date enrollmentDate;
+    std::string diagnosis;
+    std::optional<double> drugDose; // Use optional for fields that might not always be present
+
+    // Constructor
+    Patient(const std::string& id, const std::string& name, Date d_ob, const std::string& gen,
+            Date enroll_date, const std::string& diag, std::optional<double> dose = std::nullopt)
+        : patientID(id), fullName(name), dob(d_ob), gender(gen),
+          enrollmentDate(enroll_date), diagnosis(diag), drugDose(dose) {}
+
+    // Method to print patient info
+    void print() const {
+        std::cout << "Patient ID: " << patientID << std::endl;
+        std::cout << "Full Name: " << fullName << std::endl;
+        std::cout << "Date of Birth: " << dob.toString() << std::endl;
+        std::cout << "Gender: " << gender << std::endl;
+        std::cout << "Enrollment Date: " << enrollmentDate.toString() << std::endl;
+        std::cout << "Diagnosis: " << diagnosis << std::endl;
+        if (drugDose) {
+            std::cout << "Drug Dose: " << *drugDose << " mg" << std::endl;
+        } else {
+            std::cout << "Drug Dose: Not specified" << std::endl;
+        }
+        std::cout << "--------------------" << std::endl;
+    }
+};
+
+// Simple in-memory "repository" for patients
+class ClinicalTrialManager {
+public:
+    void addPatient(const Patient& patient) {
+        // Check for existing patient (simplified: real world would use a map or database lookup)
+        for (const auto& p : patients_) {
+            if (p.patientID == patient.patientID) {
+                std::cout << "Error: Patient with ID " << patient.patientID << " already exists." << std::endl;
+                return;
+            }
+        }
+        patients_.push_back(patient);
+        std::cout << "Patient " << patient.fullName << " added." << std::endl;
+    }
+
+    std::optional<Patient> getPatientById(const std::string& id) const {
+        for (const auto& p : patients_) {
+            if (p.patientID == id) {
+                return p;
+            }
+        }
+        return std::nullopt; // Return empty optional if not found
+    }
+
+    void listAllPatients() const {
+        if (patients_.empty()) {
+            std::cout << "No patients enrolled yet." << std::endl;
+            return;
+        }
+        std::cout << "\n--- All Enrolled Patients ---" << std::endl;
+        for (const auto& p : patients_) {
+            p.print();
+        }
+    }
+
+    void updatePatientDiagnosis(const std::string& patientID, const std::string& newDiagnosis) {
+        for (auto& p : patients_) { // Use reference to modify
+            if (p.patientID == patientID) {
+                p.diagnosis = newDiagnosis;
+                std::cout << "Updated diagnosis for patient " << patientID << std::endl;
+                return;
+            }
+        }
+        std::cout << "Patient with ID " << patientID << " not found." << std::endl;
+    }
+
+private:
+    std::vector<Patient> patients_; // In-memory storage
+};
+
+int main() {
+    ClinicalTrialManager manager;
+
+    Date dob1 = {1985, 5, 15};
+    Date enrollDate1 = {2023, 1, 10};
+    Patient p1("P001", "Alice Smith", dob1, "Female", enrollDate1, "Hypertension", 50.0);
+
+    Date dob2 = {1990, 8, 20};
+    Date enrollDate2 = {2023, 1, 12};
+    Patient p2("P002", "Bob Johnson", dob2, "Male", enrollDate2, "Diabetes"); // No drug dose specified
+
+    manager.addPatient(p1);
+    manager.addPatient(p2);
+    manager.addPatient(p1); // Attempt to add duplicate
+
+    manager.listAllPatients();
+
+    std::cout << "\nRetrieving Patient P001:" << std::endl;
+    std::optional<Patient> foundPatient = manager.getPatientById("P001");
+    if (foundPatient) {
+        foundPatient->print();
+    } else {
+        std::cout << "Patient P001 not found." << std::endl;
+    }
+
+    manager.updatePatientDiagnosis("P001", "Controlled Hypertension");
+    manager.listAllPatients(); // Show updated list
+
+    return 0;
+}
